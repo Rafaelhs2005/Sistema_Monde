@@ -2,10 +2,26 @@ const axios = require("axios");
 
 const API = "https://web.monde.com.br/api/v2";
 
-const LOGIN = "madeintrip.monde.com.br";
-const PASSWORD = "trs@2965234243";
+const LOGIN = "tiago.reis@madeintrip.monde.com.br";
+const PASSWORD = "Trs@2965234243";
 
 let token = null;
+
+function getCampo(dados, nomeParcial) {
+    const chave = Object.keys(dados).find(k => k.includes(nomeParcial));
+    return chave ? dados[chave] : "";
+}
+
+function dataMonde() {
+    const agora = new Date();
+
+    const offset = -3;
+    agora.setHours(agora.getHours() + offset);
+
+    const iso = agora.toISOString().replace("Z", "-03:00");
+
+    return iso;
+}
 
 async function autenticar() {
 
@@ -33,29 +49,73 @@ async function autenticar() {
     console.log("Token obtido com sucesso");
 }
 
-async function criarCliente(dados) {
+async function criarTarefa(dados) {
 
     if (!token) {
         await autenticar();
     }
 
+    const destino = dados["Cidade de destino"] || "Destino não informado";
+
+    const descricao = `
+Nova solicitação de viagem
+
+Destino: ${destino}
+Destino (repetido): ${destino}
+
+Nome: ${getCampo(dados, "nome")}
+Celular: ${getCampo(dados, "Celular")}
+Email: ${getCampo(dados, "E-mail")}
+
+Origem: ${getCampo(dados, "origem")}
+Destino: ${getCampo(dados, "destino")}
+
+Ida: ${getCampo(dados, "ida")}
+Volta: ${getCampo(dados, "volta")}
+
+Flexibilidade de datas: ${getCampo(dados, "flexibilidade")}
+
+Bagagem despachada: ${getCampo(dados, "bagagem")}
+
+Adultos: ${getCampo(dados, "adultos")}
+Crianças: ${getCampo(dados, "crianças")}
+
+Serviços adicionais: ${(getCampo(dados, "Serviços") || []).join(", ")}
+Transporte: ${(getCampo(dados, "transporte") || []).join(", ")}
+
+Informações adicionais:
+${getCampo(dados, "Informações adicionais")}
+`;
+
     const body = {
         data: {
-            type: "people",
+            type: "tasks",
             attributes: {
-                name: dados["Seu nome completo"] || "Cliente Formulário",
-                email: dados["E-mail"] || "",
-                phone: dados["Celular"] || "",
-                "mobile-phone": dados["Celular"] || "",
-                kind: "F"
+                title: destino,
+                description: descricao,
+                due: dataMonde()
+            },
+            relationships: {
+                category: {
+                    data: {
+                        id: "Aguardando",
+                        type: "task-categories"
+                    }
+                },
+                assignee: {
+                    data: {
+                        id: "4298475b-8b2b-4396-9f0c-a534eed4768a",
+                        type: "people"
+                    }
+                }
             }
         }
     };
 
     try {
 
-        const response = await axios.post(
-            `${API}/people`,
+        await axios.post(
+            `${API}/tasks`,
             body,
             {
                 headers: {
@@ -66,83 +126,14 @@ async function criarCliente(dados) {
             }
         );
 
-        console.log("Cliente criado no Monde");
-
-        return response.data.data.id;
+        console.log("Tarefa criada com sucesso");
 
     } catch (err) {
 
-        console.log("Erro ao criar cliente:");
+        console.log("Erro ao criar tarefa:");
         console.log(JSON.stringify(err.response.data, null, 2));
 
-        return null;
-
     }
-}
-
-async function criarTarefa(dados) {
-
-    if (!token) {
-        await autenticar();
-    }
-
-    const clienteId = await criarCliente(dados);
-
-    const descricao = `
-Nova solicitação de viagem
-
-Nome: ${dados["Seu nome completo"]}
-Celular: ${dados["Celular"]}
-Email: ${dados["E-mail"]}
-Origem: ${dados["Cidade de origem"]}
-Destino: ${dados["Cidade de destino"]}
-`;
-
-    const body = {
-        data: {
-            type: "tasks",
-            attributes: {
-                title: `Nova cotação - ${dados["Seu nome completo"]}`,
-                description: descricao,
-                due: dataMonde()
-            },
-            relationships: {
-                category: {
-                    data: {
-                        id: "Geral",
-                        type: "task-categories"
-                    }
-                },
-                assignee: {
-                    data: {
-                        id: "SEU_ID_DE_USUARIO",
-                        type: "people"
-                    }
-                },
-                person: {
-                    data: {
-                        id: clienteId,
-                        type: "people"
-                    }
-                }
-            }
-        }
-    };
-
-    await axios.post(
-        `${API}/tasks`,
-        body,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/vnd.api+json",
-                "Content-Type": "application/vnd.api+json"
-            }
-        }
-    );
-
-    console.log("Tarefa criada no Monde");
-
 }
 
 module.exports = { criarTarefa };

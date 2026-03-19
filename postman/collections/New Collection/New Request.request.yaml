@@ -1,0 +1,27 @@
+$kind: http-request
+name: New Request
+url: https://web.monde.com.br/api/v2/tokens?Accept=application/vnd.api+json&Content-Type=application/vnd.api+json
+method: POST
+queryParams:
+  Accept: application/vnd.api+json
+  Content-Type: application/vnd.api+json
+body:
+  type: json
+  content: "{\r
+
+    \  \"data\": {\r
+
+    \    \"type\": \"tokens\",\r
+
+    \    \"attributes\": {\r
+
+    \      \"login\": \"tiago.reis@madeintrip.monde.com.br\",\r
+
+    \      \"password\": \"trs@2965234243\"\r
+
+    \    }\r
+
+    \  }\r
+
+    }"
+order: 1773523132584
