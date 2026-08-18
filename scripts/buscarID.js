@@ -1,15 +1,18 @@
+require("dotenv").config();
 const axios = require("axios");
 
-const API = "https://web.monde.com.br/api/v2";
-const TOKEN = "madeintrip.monde.com.br";
+const { autenticar } = require("../src/services/mondeAPI");
 
+const API = "https://web.monde.com.br/api/v2";
 async function buscar() {
+    
+    const token = await autenticar();
 
     const response = await axios.get(
         `${API}/people`,
         {
             headers: {
-                Authorization: `Bearer ${TOKEN}`,
+                Authorization: `Bearer ${token}`,
                 Accept: "application/vnd.api+json",
                 "Content-Type": "application/vnd.api+json"
             }

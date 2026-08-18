@@ -2,25 +2,18 @@ const axios = require("axios");
 
 const API = "https://web.monde.com.br/api/v2";
 
-const LOGIN = "tiago.reis@madeintrip.monde.com.br";
-const PASSWORD = "Trs@2965234243";
+const LOGIN = process.env.MONDE_LOGIN || "seu_login@dominio.com";
+const PASSWORD = process.env.MONDE_PASSWORD || "sua_senha";
 
 let token = null;
 
 function getCampo(dados, nomeParcial) {
-    const chave = Object.keys(dados).find(k => k.includes(nomeParcial));
+    const chave = Object.keys(dados).find(k => k.toLowerCase().includes(nomeParcial.toLowerCase()));
     return chave ? dados[chave] : "";
 }
 
 function dataMonde() {
-    const agora = new Date();
-
-    const offset = -3;
-    agora.setHours(agora.getHours() + offset);
-
-    const iso = agora.toISOString().replace("Z", "-03:00");
-
-    return iso;
+    return new Date().toISOString();
 }
 
 async function autenticar() {
@@ -47,6 +40,7 @@ async function autenticar() {
     token = response.data.data.attributes.token;
 
     console.log("Token obtido com sucesso");
+    return token;
 }
 
 async function criarTarefa(dados) {
@@ -80,8 +74,8 @@ Bagagem despachada: ${getCampo(dados, "bagagem")}
 Adultos: ${getCampo(dados, "adultos")}
 Crianças: ${getCampo(dados, "crianças")}
 
-Serviços adicionais: ${(getCampo(dados, "Serviços") || []).join(", ")}
-Transporte: ${(getCampo(dados, "transporte") || []).join(", ")}
+Serviços adicionais: ${[].concat(getCampo(dados, "Serviços") || []).filter(Boolean).join(", ")}
+Transporte: ${[].concat(getCampo(dados, "transporte") || []).filter(Boolean).join(", ")}
 
 Informações adicionais:
 ${getCampo(dados, "Informações adicionais")}
@@ -104,7 +98,7 @@ ${getCampo(dados, "Informações adicionais")}
                 },
                 assignee: {
                     data: {
-                        id: "4298475b-8b2b-4396-9f0c-a534eed4768a",
+                        id: process.env.MONDE_ASSIGNEE_ID || "ID_DO_RESPONSAVEL",
                         type: "people"
                     }
                 }
@@ -130,10 +124,34 @@ ${getCampo(dados, "Informações adicionais")}
 
     } catch (err) {
 
-        console.log("Erro ao criar tarefa:");
-        console.log(JSON.stringify(err.response.data, null, 2));
+        if (err.response && err.response.status === 401) {
+            console.log("Token expirado. Tentando reautenticar...");
+            token = null;
+            await autenticar();
+            
+            await axios.post(
+                `${API}/tasks`,
+                body,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        Accept: "application/vnd.api+json",
+                        "Content-Type": "application/vnd.api+json"
+                    }
+                }
+            );
+            console.log("Tarefa criada com sucesso após reautenticação");
+        } else {
+            console.log("Erro ao criar tarefa:");
+            if (err.response && err.response.data) {
+                console.log(JSON.stringify(err.response.data, null, 2));
+            } else {
+                console.log(err.message);
+            }
+            throw err;
+        }
 
     }
 }
 
-module.exports = { criarTarefa };
+module.exports = { criarTarefa, autenticar };

@@ -1,7 +1,9 @@
+require("dotenv").config();
 const express = require("express");
-const { criarTarefa } = require("./mondeAPI");
+const { criarTarefa } = require("./services/mondeAPI");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -30,6 +32,6 @@ app.post("/formulario", async (req, res) => {
 
 });
 
-app.listen(3000, () => {
-    console.log("Servidor rodando na porta 3000");
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });

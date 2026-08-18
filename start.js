@@ -1,8 +1,10 @@
+require("dotenv").config();
+
 // inicia o servidor
 try {
     console.log("Iniciando servidor...");
 
-    require("./server");
+    require("./src/server");
 
     console.log("Servidor iniciado com sucesso!");
 

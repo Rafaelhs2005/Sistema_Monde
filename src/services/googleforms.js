@@ -1,7 +1,7 @@
 const { google } = require("googleapis");
 
 const auth = new google.auth.GoogleAuth({
-  keyFile: "credentials.json",
+  keyFile: process.env.GOOGLE_CREDENTIALS_PATH || "credentials.json",
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 });
 
@@ -14,7 +14,7 @@ async function pegarRespostas() {
     auth: client
   });
 
-  const spreadsheetId = "1oalwmRHcqaZt93N4Xy7azgm0kX9gVe4OYUr_ZxGt_zg";
+  const spreadsheetId = process.env.SPREADSHEET_ID || "SEU_SPREADSHEET_ID_AQUI";
 
   const range = "'Respostas ao formulário 1'!A1:P";
 

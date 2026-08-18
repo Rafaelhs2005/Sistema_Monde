@@ -1,3 +1,4 @@
+require("dotenv").config();
 const axios = require("axios");
 
 async function gerarToken() {
@@ -15,8 +16,8 @@ async function gerarToken() {
                 data: {
                     type: "tokens",
                     attributes: {
-                        login: "madeintrip.monde.com.br",
-                        password: "trs@2965234243"
+                        login: process.env.MONDE_LOGIN || "seu_login",
+                        password: process.env.MONDE_PASSWORD || "sua_senha"
                     }
                 }
             }
